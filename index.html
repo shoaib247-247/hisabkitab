@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="HisabKitab" />
+<title>HisabKitab</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  html, body { margin: 0; padding: 0; background: #FED7AA; }
+  input, textarea { font-family: inherit; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+// ---- Minimal local icon set (stand-ins for lucide-react, so this file has no npm dependency) ----
+function Icon({ size = 16, className = "", children }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      {children}
+    </svg>
+  );
+}
+const ChevronLeft = (p) => <Icon {...p}><path d="M15 18l-6-6 6-6" /></Icon>;
+const ChevronRight = (p) => <Icon {...p}><path d="M9 18l6-6-6-6" /></Icon>;
+const ChevronUp = (p) => <Icon {...p}><path d="M18 15l-6-6-6 6" /></Icon>;
+const ChevronDown = (p) => <Icon {...p}><path d="M6 9l6 6 6-6" /></Icon>;
+const Plus = (p) => <Icon {...p}><path d="M12 5v14M5 12h14" /></Icon>;
+const Trash2 = (p) => (
+  <Icon {...p}>
+    <path d="M3 6h18" />
+    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    <path d="M10 11v6M14 11v6" />
+  </Icon>
+);
+const Wallet = (p) => (
+  <Icon {...p}>
+    <path d="M21 7H5a2 2 0 0 1 0-4h12a2 2 0 0 1 2 2v2" />
+    <path d="M3 7v11a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
+    <circle cx="17" cy="14" r="1.5" />
+  </Icon>
+);
+const TrendingDown = (p) => (
+  <Icon {...p}>
+    <path d="M22 17l-8.5-8.5-5 5L2 7" />
+    <path d="M16 17h6v-6" />
+  </Icon>
+);
+const TrendingUp = (p) => (
+  <Icon {...p}>
+    <path d="M22 7l-8.5 8.5-5-5L2 17" />
+    <path d="M16 7h6v6" />
+  </Icon>
+);
+const Loader2 = (p) => (
+  <Icon {...p}>
+    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+  </Icon>
+);
+const Bold = (p) => (
+  <Icon {...p}>
+    <path d="M6 4h8a4 4 0 0 1 0 8H6zM6 12h9a4 4 0 0 1 0 8H6z" />
+  </Icon>
+);
+const Italic = (p) => (
+  <Icon {...p}>
+    <path d="M19 4h-9M14 20H5M15 4L9 20" />
+  </Icon>
+);
+const Underline = (p) => (
+  <Icon {...p}>
+    <path d="M6 3v7a6 6 0 0 0 12 0V3" />
+    <path d="M4 21h16" />
+  </Icon>
+);
+const List = (p) => (
+  <Icon {...p}>
+    <path d="M8 6h13M8 12h13M8 18h13" />
+    <circle cx="3.5" cy="6" r="1" fill="currentColor" stroke="none" />
+    <circle cx="3.5" cy="12" r="1" fill="currentColor" stroke="none" />
+    <circle cx="3.5" cy="18" r="1" fill="currentColor" stroke="none" />
+  </Icon>
+);
+const LayoutGrid = (p) => (
+  <Icon {...p}>
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+    <rect x="14" y="14" width="7" height="7" rx="1" />
+  </Icon>
+);
+const PiggyBank = (p) => (
+  <Icon {...p}>
+    <path d="M19 9a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1h-1v2a3 3 0 0 1-3 3h-1l-1 2h-3l-1-2H8a4 4 0 0 1-4-4v-1a5 5 0 0 1 5-5h1a5 5 0 0 1 4.58 3H17a2 2 0 0 1 2 2z" />
+    <circle cx="15" cy="11" r="0.6" fill="currentColor" stroke="none" />
+    <path d="M6 12H4M11 5V3" />
+  </Icon>
+);
+
+// ---- window.storage shim backed by localStorage, matching the Claude-artifact API shape ----
+// (get/set/delete throw on a missing key to mirror the original API; list() reads by prefix)
+window.storage = {
+  async get(key, shared) {
+    const raw = localStorage.getItem("hisabkitab:" + key);
+    if (raw === null) throw new Error("Key not found: " + key);
+    return { key, value: raw, shared: !!shared };
+  },
+  async set(key, value, shared) {
+    localStorage.setItem("hisabkitab:" + key, value);
+    return { key, value, shared: !!shared };
+  },
+  async delete(key, shared) {
+    localStorage.removeItem("hisabkitab:" + key);
+    return { key, deleted: true, shared: !!shared };
+  },
+  async list(prefix, shared) {
+    const p = "hisabkitab:" + (prefix || "");
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(p)) keys.push(k.slice("hisabkitab:".length));
+    }
+    return { keys, prefix, shared: !!shared };
+  },
+};
+
+
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+function monthKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function currency(n) {
+  const v = Number(n) || 0;
+  const sign = v < 0 ? "-" : "";
+  return sign + "₹" + Math.abs(v).toLocaleString("en-IN");
+}
+
+// Safely evaluates a plain arithmetic string like "1383+1092" — digits, spaces,
+// parentheses and + - * / only. Returns NaN if the string contains anything else.
+function safeEval(expr) {
+  const trimmed = (expr ?? "").toString().trim();
+  if (trimmed === "") return 0;
+  if (!/^[0-9+\-*/(). ]*$/.test(trimmed)) return NaN;
+  try {
+    const val = Function(`"use strict"; return (${trimmed});`)();
+    return typeof val === "number" && isFinite(val) ? val : NaN;
+  } catch {
+    return NaN;
+  }
+}
+
+
+
+function emptyBudgetMonth() {
+  return {
+    configs: [
+      conf("Considered Salary", 0),
+      conf("Abba", 0),
+      conf("Abba Home Rent", 0),
+    ],
+    incomeFormula: "Considered Salary - (Abba + Abba Home Rent)",
+    percentages: { needs: 50, wants: 25, savings: 25 },
+    notes: "",
+    needs: [
+      { id: crypto.randomUUID(), name: "Rent", budget: 0, spent: 0 },
+      { id: crypto.randomUUID(), name: "Groceries", budget: 0, spent: 0 },
+    ],
+    wants: [
+      { id: crypto.randomUUID(), name: "Outside food", budget: 0, spent: 0 },
+      { id: crypto.randomUUID(), name: "Personal", budget: 0, spent: 0 },
+    ],
+    savings: [
+      { id: crypto.randomUUID(), name: "Emergency Fund", budget: 0, spent: 0 },
+    ],
+  };
+}
+
+function cat(name, budget, spent) {
+  return { id: crypto.randomUUID(), name, budget: budget || 0, spent: spent || 0 };
+}
+
+function conf(name, value) {
+  return { id: crypto.randomUUID(), name, value: value || 0 };
+}
+
+// Safely evaluates a plain arithmetic string like "1383+1092" — digits, spaces,
+// parentheses and + - * / only. Returns NaN if the string contains anything else.
+// Evaluates a formula like "Considered Salary - (Abba + Abba Home Rent)" by substituting
+// configuration names with their numeric values, then safely evaluating the arithmetic.
+function evalFormula(formula, configs) {
+  if (!formula) return 0;
+  let expr = formula;
+  const byLength = [...(configs || [])].sort((a, b) => b.name.length - a.name.length);
+  for (const c of byLength) {
+    if (!c.name) continue;
+    const escaped = c.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    expr = expr.replace(new RegExp(escaped, "g"), `(${Number(c.value) || 0})`);
+  }
+  return safeEval(expr);
+}
+
+// Seeded from the user's spreadsheet for months already recorded there.
+const SEED_BUDGET = {
+  "2026-08": {
+    configs: [
+      conf("Considered Salary", 116000),
+      conf("Abba", 0),
+      conf("Abba Home Rent", 0),
+    ],
+    incomeFormula: "Considered Salary - (Abba + Abba Home Rent)",
+    percentages: { needs: 50, wants: 25, savings: 25 },
+    needs: [
+      cat("Rent", 21500, 21500),
+      cat("Electricity", 1830, 0),
+      cat("Medical", 3000, 3000),
+      cat("Dairy Products", 2000, 742),
+      cat("Eggs", 1500, 810),
+      cat("Meat", 4000, 2500),
+      cat("Groceries", 4000, 1383),
+      cat("Bike Petrol", 1500, 500),
+      cat("Car Petrol", 3500, 0),
+      cat("Fruits", 2000, 700),
+      cat("Veg", 1000, 120),
+      cat("Dry Fruits", 1500, 1500),
+      cat("Maids", 2000, 1400),
+      cat("Gas", 1000, 945),
+      cat("Haircut", 100, 0),
+      cat("Recharges", 1160, 301),
+      cat("Zakat to CB", 10000, 10000),
+      cat("Metro Expenses", 1500, 0),
+    ],
+    wants: [
+      cat("Ammi", 1000, 0),
+      cat("Eids", 4000, 4000),
+      cat("Travel", 2000, 2000),
+      cat("Hasi", 2500, 2500),
+      cat("Outside food", 3000, 205),
+      cat("Snacks", 800, 240),
+      cat("Personal", 2000, 794),
+      cat("Newspaper", 230, 0),
+      cat("Sadaqah/Charity", 1000, 50),
+      cat("Qurbani", 1500, 1500),
+      cat("Hazrat Fees", 1000, 0),
+      cat("Aaira", 0, 100),
+      cat("Stationary", 0, 157),
+      cat("Cocunut", 0, 200),
+      cat("Flowers", 0, 120),
+      cat("Flipkart emi", 0, 100),
+      cat("Clothes", 0, 80),
+    ],
+    savings: [
+      cat("Chit", 10000, 10000),
+      cat("Abba", 10000, 10000),
+      cat("Emergency Fund", 9000, 9000),
+    ],
+  },
+};
+
+function CategoryRow({ cat, onUpdate, onDelete, onMoveUp, onMoveDown, isFirst, isLast }) {
+  const pct = cat.budget > 0 ? Math.min(150, Math.round((cat.spent / cat.budget) * 100)) : 0;
+  const over = cat.budget > 0 && cat.spent > cat.budget;
+  const barColor = over ? "bg-red-500" : pct > 80 ? "bg-amber-500" : "bg-blue-500";
+
+  const [spentText, setSpentText] = useState(cat.spent ? String(cat.spent) : "");
+  useEffect(() => {
+    setSpentText(cat.spent ? String(cat.spent) : "");
+  }, [cat.spent]);
+
+  const commitSpent = () => {
+    const result = safeEval(spentText);
+    const finalVal = isNaN(result) ? Number(cat.spent) || 0 : result;
+    setSpentText(finalVal ? String(finalVal) : "");
+    if (finalVal !== cat.spent) onUpdate({ ...cat, spent: finalVal });
+  };
+
+  return (
+    <div className="group py-2.5 border-b border-blue-200 last:border-0">
+      <div className="flex items-center gap-3">
+        <div className="flex flex-col shrink-0 -my-1">
+          <button
+            onClick={onMoveUp}
+            disabled={isFirst}
+            className="text-black hover:text-black disabled:opacity-0 disabled:pointer-events-none transition-colors"
+            aria-label={`Move ${cat.name} up`}
+          >
+            <ChevronUp size={14} />
+          </button>
+          <button
+            onClick={onMoveDown}
+            disabled={isLast}
+            className="text-black hover:text-black disabled:opacity-0 disabled:pointer-events-none transition-colors"
+            aria-label={`Move ${cat.name} down`}
+          >
+            <ChevronDown size={14} />
+          </button>
+        </div>
+        <input
+          value={cat.name}
+          onChange={(e) => onUpdate({ ...cat, name: e.target.value })}
+          className="flex-1 min-w-0 bg-transparent text-sm font-medium text-black outline-none focus:bg-blue-100 rounded px-1 -mx-1 py-0.5"
+        />
+        <div className="flex items-center gap-1 text-sm text-black shrink-0">
+          <span>₹</span>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={spentText}
+            placeholder="0"
+            onChange={(e) => setSpentText(e.target.value)}
+            onBlur={commitSpent}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                e.target.blur();
+              }
+            }}
+            title="You can type an expression like 1383+1092 and it'll be summed"
+            className="w-20 bg-transparent text-right outline-none focus:bg-blue-100 rounded px-1"
+          />
+          <span className="text-black">/</span>
+          <input
+            type="number"
+            value={cat.budget || ""}
+            placeholder="0"
+            onChange={(e) => onUpdate({ ...cat, budget: Number(e.target.value) })}
+            className="w-16 bg-transparent text-right outline-none focus:bg-blue-100 rounded px-1"
+          />
+        </div>
+        <button
+          onClick={() => onDelete(cat.id)}
+          className="opacity-0 group-hover:opacity-100 text-black hover:text-red-500 transition-opacity shrink-0"
+          aria-label={`Remove ${cat.name}`}
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+      <div className="mt-1.5 h-1.5 rounded-full bg-blue-100 overflow-hidden">
+        <div className={`h-full rounded-full ${barColor} transition-all`} style={{ width: `${Math.min(100, pct)}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function RichNotes({ value, onChange, placeholder, label }) {
+  const ref = useRef(null);
+  const lastValue = useRef(value);
+
+  useEffect(() => {
+    if (ref.current && value !== lastValue.current) {
+      ref.current.innerHTML = value || "";
+      lastValue.current = value;
+    }
+  }, [value]);
+
+  const handleInput = () => {
+    if (!ref.current) return;
+    const html = ref.current.innerHTML;
+    lastValue.current = html;
+    onChange(html);
+  };
+
+  const exec = (cmd) => {
+    ref.current?.focus();
+    document.execCommand(cmd, false, null);
+    handleInput();
+  };
+
+  const ToolbarButton = ({ onClick, label, children }) => (
+    <button
+      type="button"
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onClick();
+      }}
+      aria-label={label}
+      className="p-1.5 rounded-md border border-blue-200 text-black hover:bg-blue-50 transition-colors"
+    >
+      {children}
+    </button>
+  );
+
+  return (
+    <div>
+      <style>{`
+        .rich-notes-field ul { list-style: disc; padding-left: 1.25rem; margin: 0.25rem 0; }
+        .rich-notes-field b, .rich-notes-field strong { font-weight: 700; }
+        .rich-notes-field i, .rich-notes-field em { font-style: italic; }
+        .rich-notes-field u { text-decoration: underline; }
+        .rich-notes-field:empty:before { content: attr(data-placeholder); color: #93c5fd; }
+      `}</style>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-sm font-medium text-black">{label}</div>
+        <div className="flex items-center gap-1.5">
+          <ToolbarButton onClick={() => exec("bold")} label="Bold">
+            <Bold size={14} />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => exec("italic")} label="Italic">
+            <Italic size={14} />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => exec("underline")} label="Underline">
+            <Underline size={14} />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => exec("insertUnorderedList")} label="Bullet list">
+            <List size={14} />
+          </ToolbarButton>
+        </div>
+      </div>
+      <div
+        ref={ref}
+        contentEditable
+        suppressContentEditableWarning
+        onInput={handleInput}
+        data-placeholder={placeholder}
+        className="rich-notes-field min-h-[80px] w-full text-sm bg-blue-50 rounded-lg px-3 py-2 outline-none text-black"
+      />
+    </div>
+  );
+}
+
+function Section({ title, subtitle, items, setItems, income, actualBudgetPct, actualBudgetLabel }) {
+  const budget = items.reduce((s, c) => s + (Number(c.budget) || 0), 0);
+  const spent = items.reduce((s, c) => s + (Number(c.spent) || 0), 0);
+  const remaining = budget - spent;
+  const actualBudget = (Number(income) || 0) * actualBudgetPct;
+
+  const update = (updated) => setItems(items.map((c) => (c.id === updated.id ? updated : c)));
+  const del = (id) => setItems(items.filter((c) => c.id !== id));
+  const add = () => setItems([...items, { id: crypto.randomUUID(), name: "New category", budget: 0, spent: 0 }]);
+  const move = (index, delta) => {
+    const target = index + delta;
+    if (target < 0 || target >= items.length) return;
+    const next = [...items];
+    [next[index], next[target]] = [next[target], next[index]];
+    setItems(next);
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-blue-200 p-5">
+      <div className="flex items-start justify-between mb-1">
+        <div>
+          <h3 className="text-base font-semibold text-black">{title}</h3>
+          <p className="text-xs text-black">{subtitle}</p>
+          <p className="text-xs text-black">
+            {actualBudgetLabel} <span className="font-medium text-black">{currency(actualBudget)}</span>
+          </p>
+        </div>
+        <div className="text-right">
+          <div className={`text-lg font-semibold tabular-nums ${remaining < 0 ? "text-red-600" : "text-black"}`}>
+            {currency(spent)}
+          </div>
+          <div className="text-xs text-black">of {currency(budget)}</div>
+        </div>
+      </div>
+      <div className="mt-3">
+        {items.map((c, i) => (
+          <CategoryRow
+            key={c.id}
+            cat={c}
+            onUpdate={update}
+            onDelete={del}
+            onMoveUp={() => move(i, -1)}
+            onMoveDown={() => move(i, 1)}
+            isFirst={i === 0}
+            isLast={i === items.length - 1}
+          />
+        ))}
+      </div>
+      <button
+        onClick={add}
+        className="mt-3 flex items-center gap-1.5 text-xs font-medium text-black hover:text-black transition-colors"
+      >
+        <Plus size={14} /> Add category
+      </button>
+    </div>
+  );
+}
+
+function MonthlyBudgetModule() {
+  const [date, setDate] = useState(new Date());
+  const [data, setData] = useState(null);
+  const [status, setStatus] = useState("loading");
+  const [showConfig, setShowConfig] = useState(false);
+
+  const key = `budget:${monthKey(date)}`;
+
+  const migrate = (d) => {
+    if (!d) return d;
+    const configs =
+      d.configs ||
+      [
+        conf("Considered Salary", d.consideredSalary || 0),
+        conf("Abba", d.abba || 0),
+        conf("Abba Home Rent", d.abbaHomeRent || 0),
+      ];
+    return {
+      ...d,
+      configs,
+      incomeFormula: d.incomeFormula || "Considered Salary - (Abba + Abba Home Rent)",
+      percentages: d.percentages || { needs: 50, wants: 25, savings: 25 },
+      savings: d.savings || [],
+      notes: /</.test(d.notes || "") ? d.notes : (d.notes || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>"),
+    };
+  };
+
+  const load = useCallback(async () => {
+    setStatus("loading");
+    try {
+      const res = await window.storage.get(key, false);
+      const loaded = res ? JSON.parse(res.value) : SEED_BUDGET[monthKey(date)] || emptyBudgetMonth();
+      setData(migrate(loaded));
+      setStatus("ready");
+    } catch {
+      setData(migrate(SEED_BUDGET[monthKey(date)] || emptyBudgetMonth()));
+      setStatus("ready");
+    }
+  }, [key]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const save = useCallback(
+    async (next) => {
+      setData(next);
+      setStatus("saving");
+      try {
+        await window.storage.set(key, JSON.stringify(next), false);
+        setStatus("ready");
+      } catch {
+        setStatus("error");
+      }
+    },
+    [key]
+  );
+
+  const copyLastMonthBudget = useCallback(async () => {
+    const prev = new Date(date);
+    prev.setMonth(prev.getMonth() - 1);
+    const prevKey = `budget:${monthKey(prev)}`;
+
+    let prevData = null;
+    try {
+      const res = await window.storage.get(prevKey, false);
+      prevData = res ? JSON.parse(res.value) : SEED_BUDGET[monthKey(prev)] || null;
+    } catch {
+      prevData = SEED_BUDGET[monthKey(prev)] || null;
+    }
+
+    if (!prevData) {
+      setStatus("no-prev");
+      return;
+    }
+    prevData = migrate(prevData);
+
+    const next = {
+      ...data,
+      configs: (prevData.configs || []).map((c) => conf(c.name, c.value)),
+      incomeFormula: prevData.incomeFormula || data.incomeFormula,
+      percentages: prevData.percentages || data.percentages,
+      needs: prevData.needs.filter((c) => Number(c.budget) > 0).map((c) => cat(c.name, c.budget, 0)),
+      wants: prevData.wants.filter((c) => Number(c.budget) > 0).map((c) => cat(c.name, c.budget, 0)),
+      savings: (prevData.savings || []).filter((c) => Number(c.budget) > 0).map((c) => cat(c.name, c.budget, 0)),
+    };
+    save(next);
+  }, [date, data, save]);
+
+  const shiftMonth = (delta) => {
+    const d = new Date(date);
+    d.setMonth(d.getMonth() + delta);
+    setDate(d);
+  };
+
+  if (!data) {
+    return (
+      <div className="min-h-[300px] flex items-center justify-center bg-orange-200">
+        <Loader2 className="animate-spin text-black" size={24} />
+      </div>
+    );
+  }
+
+  const needsBudget = data.needs.reduce((s, c) => s + (Number(c.budget) || 0), 0);
+  const needsSpent = data.needs.reduce((s, c) => s + (Number(c.spent) || 0), 0);
+  const wantsBudget = data.wants.reduce((s, c) => s + (Number(c.budget) || 0), 0);
+  const wantsSpent = data.wants.reduce((s, c) => s + (Number(c.spent) || 0), 0);
+  const savingsBudget = data.savings.reduce((s, c) => s + (Number(c.budget) || 0), 0);
+  const savingsSpent = data.savings.reduce((s, c) => s + (Number(c.spent) || 0), 0);
+  const totalSpent = needsSpent + wantsSpent + savingsSpent;
+  const rawIncome = evalFormula(data.incomeFormula, data.configs);
+  const income = isNaN(rawIncome) ? 0 : rawIncome;
+  const balance = income - totalSpent;
+
+  return (
+    <div className="min-h-screen bg-orange-200 text-black">
+      <div className="max-w-3xl mx-auto px-5 py-8">
+        {/* Month nav */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => shiftMonth(-1)}
+              className="p-1.5 rounded-lg hover:bg-blue-700 text-black hover:text-black transition-colors"
+              aria-label="Previous month"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <h1 className="text-xl font-semibold tracking-tight w-40 text-center text-black">
+              {MONTH_NAMES[date.getMonth()]} {date.getFullYear()}
+            </h1>
+            <button
+              onClick={() => shiftMonth(1)}
+              className="p-1.5 rounded-lg hover:bg-blue-700 text-black hover:text-black transition-colors"
+              aria-label="Next month"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+          <div className="flex items-center gap-3 text-xs text-black h-4">
+            {status === "saving" && "Saving..."}
+            {status === "error" && <span className="text-red-200">Couldn't save</span>}
+            {status === "no-prev" && <span className="text-amber-200">No data for last month</span>}
+            <button
+              onClick={copyLastMonthBudget}
+              className="text-black hover:text-black font-medium underline underline-offset-2"
+            >
+              Copy last month's budget
+            </button>
+            {SEED_BUDGET[monthKey(date)] && (
+              <button
+                onClick={() => save(SEED_BUDGET[monthKey(date)])}
+                className="text-black hover:text-black font-medium underline underline-offset-2"
+              >
+                Load from spreadsheet
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Configurations */}
+        <div className="bg-white rounded-xl border border-blue-200 mb-3 overflow-hidden">
+          <button
+            onClick={() => setShowConfig((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-black"
+          >
+            Configurations
+            <ChevronDown size={16} className={`text-black transition-transform ${showConfig ? "rotate-180" : ""}`} />
+          </button>
+          {showConfig && (
+            <div className="p-4 pt-0 space-y-5">
+              {/* Values */}
+              <div>
+                <div className="text-xs font-medium text-black mb-1">Values</div>
+                {data.configs.map((c) => (
+                  <div key={c.id} className="group flex items-center gap-2 py-1.5 border-b border-blue-100 last:border-0">
+                    <input
+                      value={c.name}
+                      onChange={(e) =>
+                        save({ ...data, configs: data.configs.map((x) => (x.id === c.id ? { ...x, name: e.target.value } : x)) })
+                      }
+                      className="flex-1 min-w-0 bg-transparent text-sm font-medium text-black outline-none focus:bg-blue-50 rounded px-1 -mx-1 py-0.5"
+                    />
+                    <div className="flex items-center gap-1 text-sm text-black shrink-0">
+                      <span>₹</span>
+                      <input
+                        type="number"
+                        value={c.value || ""}
+                        placeholder="0"
+                        onChange={(e) =>
+                          save({ ...data, configs: data.configs.map((x) => (x.id === c.id ? { ...x, value: Number(e.target.value) } : x)) })
+                        }
+                        className="w-24 bg-transparent text-right outline-none focus:bg-blue-50 rounded px-1"
+                      />
+                    </div>
+                    <button
+                      onClick={() => save({ ...data, configs: data.configs.filter((x) => x.id !== c.id) })}
+                      className="opacity-0 group-hover:opacity-100 text-black hover:text-red-500 transition-opacity shrink-0"
+                      aria-label={`Remove ${c.name}`}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => save({ ...data, configs: [...data.configs, conf("New setting", 0)] })}
+                  className="mt-2 flex items-center gap-1.5 text-xs font-medium text-black hover:text-black transition-colors"
+                >
+                  <Plus size={14} /> Add configuration
+                </button>
+              </div>
+
+              {/* Income formula */}
+              <div>
+                <div className="text-xs font-medium text-black mb-1">Edit Income Formula</div>
+                <input
+                  value={data.incomeFormula}
+                  onChange={(e) => save({ ...data, incomeFormula: e.target.value })}
+                  placeholder="e.g. Considered Salary - (Abba + Abba Home Rent)"
+                  className="w-full text-sm bg-blue-50 rounded-lg px-3 py-2 outline-none font-mono text-black"
+                />
+                <div className="text-[11px] text-black mt-1">
+                  Use the value names above. Computed income:{" "}
+                  <span className="font-medium text-black">{currency(income)}</span>
+                  {isNaN(rawIncome) && <span className="text-red-500 ml-1">Check the formula — a name may not match.</span>}
+                </div>
+              </div>
+
+              {/* Percentages */}
+              <div>
+                <div className="text-xs font-medium text-black mb-1">Edit Needs, Wants, and Savings %</div>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    ["needs", "Needs %"],
+                    ["wants", "Wants %"],
+                    ["savings", "Savings %"],
+                  ].map(([field, label]) => (
+                    <div key={field}>
+                      <div className="text-xs text-black mb-1">{label}</div>
+                      <input
+                        type="number"
+                        value={data.percentages[field] || ""}
+                        placeholder="0"
+                        onChange={(e) =>
+                          save({ ...data, percentages: { ...data.percentages, [field]: Number(e.target.value) } })
+                        }
+                        className="w-full text-sm bg-blue-50 rounded-lg px-2 py-1.5 outline-none text-black"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Notes */}
+        <div className="bg-white rounded-xl border border-blue-200 p-4 mb-6">
+          <RichNotes
+            label="Notes"
+            value={data.notes || ""}
+            onChange={(html) => save({ ...data, notes: html })}
+            placeholder={`Anything worth remembering about ${MONTH_NAMES[date.getMonth()]}...`}
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-white rounded-xl border border-blue-200 p-4">
+            <div className="flex items-center gap-1.5 text-xs text-black mb-1">
+              <Wallet size={13} /> Income
+            </div>
+            <div className="text-lg font-semibold tabular-nums">{currency(income)}</div>
+            <div className="text-[11px] text-black mt-0.5">From your income formula</div>
+          </div>
+          <div className="bg-red-600 rounded-xl border border-red-700 p-4">
+            <div className="flex items-center gap-1.5 text-xs text-white mb-1">
+              <TrendingDown size={13} /> Spent so far
+            </div>
+            <div className="text-lg font-semibold tabular-nums text-white">{currency(totalSpent)}</div>
+          </div>
+          <div className="bg-emerald-600 rounded-xl border border-emerald-700 p-4">
+            <div className="flex items-center gap-1.5 text-xs text-white mb-1">
+              <TrendingUp size={13} /> Balance
+            </div>
+            <div className="text-lg font-semibold tabular-nums text-white">
+              {currency(balance)}
+            </div>
+          </div>
+        </div>
+
+        {/* Needs / Wants */}
+        <div className="space-y-4">
+          <Section
+            title="Needs"
+            subtitle={`Budget ${currency(needsBudget)}`}
+            items={data.needs}
+            setItems={(next) => save({ ...data, needs: next })}
+            income={income}
+            actualBudgetPct={(data.percentages.needs || 0) / 100}
+            actualBudgetLabel={`Actual Budget (${data.percentages.needs || 0}% of Income)`}
+          />
+          <Section
+            title="Wants"
+            subtitle={`Budget ${currency(wantsBudget)}`}
+            items={data.wants}
+            setItems={(next) => save({ ...data, wants: next })}
+            income={income}
+            actualBudgetPct={(data.percentages.wants || 0) / 100}
+            actualBudgetLabel={`Actual Budget (${data.percentages.wants || 0}% of Income)`}
+          />
+          <Section
+            title="Savings"
+            subtitle={`Budget ${currency(savingsBudget)}`}
+            items={data.savings}
+            setItems={(next) => save({ ...data, savings: next })}
+            income={income}
+            actualBudgetPct={(data.percentages.savings || 0) / 100}
+            actualBudgetLabel={`Actual Budget (${data.percentages.savings || 0}% of Income)`}
+          />
+        </div>
+
+        <p className="text-xs text-black text-center mt-6">
+          Data is saved to this device as you type — switch months freely, nothing is lost.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
+
+// Safely evaluates a plain arithmetic string like "1383+1092" — digits, spaces,
+// parentheses and + - * / only. Returns NaN if the string contains anything else.
+function fund(name, openingBalance, budgetAdded, expenses) {
+  return { id: crypto.randomUUID(), name, openingBalance: openingBalance || 0, budgetAdded: budgetAdded || 0, expenses: expenses || [] };
+}
+
+function lineItem(name, amount) {
+  return { id: crypto.randomUUID(), name, amount: amount || 0 };
+}
+
+function emptySpecialMonth() {
+  return {
+    funds: [
+      fund("Eid Expenses", 0, 0, []),
+      fund("Qurbani", 0, 0, []),
+      fund("Travel", 0, 0, []),
+      fund("Medical", 0, 0, []),
+    ],
+    zakat: {
+      openingBalance: 0,
+      budgetAdded: 0,
+      disbursements: [],
+    },
+  };
+}
+
+// Seeded from the user's spreadsheet.
+const SEED_SPECIAL = {
+  "2026-08": {
+    funds: [
+      fund("Eid Expenses", -1091, 4000, []),
+      fund("Qurbani", -200, 1500, []),
+      fund("Travel", 7694, 2000, []),
+      fund("Medical", -487, 3000, [lineItem("Med", 992)]),
+    ],
+    zakat: {
+      openingBalance: 7000,
+      budgetAdded: 10000,
+      disbursements: [lineItem("Faizan NGO", 1000), lineItem("Assam Flood", 10000)],
+    },
+  },
+};
+
+// An amount input that accepts arithmetic (e.g. "1383+1092") and sums it on blur/Enter.
+function ExprInput({ value, onCommit, className, placeholder }) {
+  const [text, setText] = useState(value ? String(value) : "");
+  useEffect(() => {
+    setText(value ? String(value) : "");
+  }, [value]);
+
+  const commit = () => {
+    const result = safeEval(text);
+    const finalVal = isNaN(result) ? Number(value) || 0 : result;
+    setText(finalVal ? String(finalVal) : "");
+    if (finalVal !== value) onCommit(finalVal);
+  };
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={text}
+      placeholder={placeholder ?? "0"}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.target.blur();
+        }
+      }}
+      title="You can type an expression like 1383+1092 and it'll be summed"
+      className={className}
+    />
+  );
+}
+
+function LineItemRow({ item, onUpdate, onDelete, placeholder }) {
+  return (
+    <tr className="group border-b border-blue-100 last:border-0">
+      <td className="py-1 pr-2">
+        <input
+          value={item.name}
+          onChange={(e) => onUpdate({ ...item, name: e.target.value })}
+          placeholder={placeholder}
+          className="w-full min-w-0 bg-transparent text-sm text-black outline-none focus:bg-blue-100 rounded px-1 -mx-1 py-0.5"
+        />
+      </td>
+      <td className="py-1 w-24">
+        <div className="flex items-center gap-1 text-sm text-black justify-end">
+          <span>₹</span>
+          <ExprInput
+            value={item.amount}
+            onCommit={(v) => onUpdate({ ...item, amount: v })}
+            className="w-16 bg-transparent text-right outline-none focus:bg-blue-100 rounded px-1"
+          />
+        </div>
+      </td>
+      <td className="py-1 w-6 text-right">
+        <button
+          onClick={() => onDelete(item.id)}
+          className="opacity-0 group-hover:opacity-100 text-black hover:text-red-500 transition-opacity"
+          aria-label="Remove"
+        >
+          <Trash2 size={13} />
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+function FundBlock({ f, onUpdate, onDelete, onMoveUp, onMoveDown, isFirst, isLast }) {
+  const spent = f.expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  const closing = (Number(f.openingBalance) || 0) + (Number(f.budgetAdded) || 0) - spent;
+
+  const updateExpense = (updated) => onUpdate({ ...f, expenses: f.expenses.map((e) => (e.id === updated.id ? updated : e)) });
+  const deleteExpense = (id) => onUpdate({ ...f, expenses: f.expenses.filter((e) => e.id !== id) });
+  const addExpense = () => onUpdate({ ...f, expenses: [...f.expenses, lineItem("", 0)] });
+
+  return (
+    <div className="group border-2 border-blue-400 rounded-lg overflow-hidden flex flex-col h-full">
+      <div className="flex items-center gap-2 bg-blue-600 px-3 py-2">
+        <input
+          value={f.name}
+          onChange={(e) => onUpdate({ ...f, name: e.target.value })}
+          className="flex-1 min-w-0 bg-transparent text-sm font-semibold text-white outline-none focus:bg-blue-700 rounded px-1 -mx-1 py-0.5 placeholder-white/70"
+        />
+        <div className="text-right shrink-0">
+          <div className="text-[9px] text-white/80 leading-none">Closing</div>
+          <div className={`text-sm font-semibold tabular-nums ${closing < 0 ? "text-red-200" : "text-white"}`}>{currency(closing)}</div>
+        </div>
+        <button onClick={() => onDelete(f.id)} className="opacity-0 group-hover:opacity-100 text-white hover:text-red-200 transition-opacity shrink-0" aria-label={`Remove ${f.name}`}>
+          <Trash2 size={13} />
+        </button>
+      </div>
+
+      <div className="p-3 flex flex-col flex-1">
+      <table className="w-full text-sm mb-2">
+        <thead>
+          <tr className="text-[9px] text-black/60 text-left">
+            <th className="font-normal pb-1 w-1/2">Opening</th>
+            <th className="font-normal pb-1 text-right">Added</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td className="pr-2">
+              <div className="flex items-center gap-1">
+                <span className="text-xs">₹</span>
+                <ExprInput value={f.openingBalance} onCommit={(v) => onUpdate({ ...f, openingBalance: v })} className="w-full bg-blue-50 rounded px-1.5 py-1 outline-none text-sm" />
+              </div>
+            </td>
+            <td>
+              <div className="flex items-center gap-1 justify-end">
+                <span className="text-xs">₹</span>
+                <ExprInput value={f.budgetAdded} onCommit={(v) => onUpdate({ ...f, budgetAdded: v })} className="w-full bg-blue-50 rounded px-1.5 py-1 outline-none text-sm text-right" />
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table className="w-full text-sm flex-1">
+        <thead>
+          <tr className="text-[9px] text-black/60 text-left border-b border-blue-100">
+            <th className="font-normal pb-1">Expense</th>
+            <th className="font-normal pb-1 text-right">Amount</th>
+            <th className="w-5"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {f.expenses.map((e) => (
+            <LineItemRow key={e.id} item={e} onUpdate={updateExpense} onDelete={deleteExpense} placeholder="What was it for?" />
+          ))}
+        </tbody>
+      </table>
+      <div className="flex items-center justify-between mt-2">
+        <button onClick={addExpense} className="flex items-center gap-1 text-xs font-medium text-black hover:opacity-70 transition-opacity">
+          <Plus size={13} /> Add expense
+        </button>
+        <div className="text-xs text-black/60">
+          Spent: <span className="font-medium text-black">{currency(spent)}</span>
+        </div>
+      </div>
+      </div>
+    </div>
+  );
+}
+
+function SpecialExpensesModule() {
+  const [date, setDate] = useState(new Date());
+  const [data, setData] = useState(null);
+  const [status, setStatus] = useState("loading");
+
+  const key = `special:${monthKey(date)}`;
+
+  const migrate = (d) => {
+    if (!d) return d;
+    return {
+      funds: (d.funds || []).map((f) => ({
+        ...f,
+        expenses: f.expenses || (f.spent ? [lineItem(f.name, f.spent)] : []),
+      })),
+      zakat: {
+        openingBalance: d.zakat?.openingBalance || 0,
+        budgetAdded: d.zakat?.budgetAdded || 0,
+        disbursements: d.zakat?.disbursements || [],
+      },
+    };
+  };
+
+  const load = useCallback(async () => {
+    setStatus("loading");
+    try {
+      const res = await window.storage.get(key, false);
+      const loaded = res ? JSON.parse(res.value) : SEED_SPECIAL[monthKey(date)] || emptySpecialMonth();
+      setData(migrate(loaded));
+      setStatus("ready");
+    } catch {
+      setData(migrate(SEED_SPECIAL[monthKey(date)] || emptySpecialMonth()));
+      setStatus("ready");
+    }
+  }, [key]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const save = useCallback(
+    async (next) => {
+      setData(next);
+      setStatus("saving");
+      try {
+        await window.storage.set(key, JSON.stringify(next), false);
+        setStatus("ready");
+      } catch {
+        setStatus("error");
+      }
+    },
+    [key]
+  );
+
+  const shiftMonth = (delta) => {
+    const d = new Date(date);
+    d.setMonth(d.getMonth() + delta);
+    setDate(d);
+  };
+
+  const pullFromLastMonth = useCallback(async () => {
+    const prev = new Date(date);
+    prev.setMonth(prev.getMonth() - 1);
+    const prevKey = `special:${monthKey(prev)}`;
+
+    let prevData = null;
+    try {
+      const res = await window.storage.get(prevKey, false);
+      prevData = res ? JSON.parse(res.value) : SEED_SPECIAL[monthKey(prev)] || null;
+    } catch {
+      prevData = SEED_SPECIAL[monthKey(prev)] || null;
+    }
+
+    if (!prevData) {
+      setStatus("no-prev");
+      return;
+    }
+    prevData = migrate(prevData);
+
+    const next = {
+      funds: prevData.funds.map((f) => {
+        const prevSpent = (f.expenses || []).reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        const closing = (Number(f.openingBalance) || 0) + (Number(f.budgetAdded) || 0) - prevSpent;
+        return fund(f.name, closing, f.budgetAdded, []);
+      }),
+      zakat: {
+        openingBalance:
+          (Number(prevData.zakat.openingBalance) || 0) +
+          (Number(prevData.zakat.budgetAdded) || 0) -
+          prevData.zakat.disbursements.reduce((s, d) => s + (Number(d.amount) || 0), 0),
+        budgetAdded: prevData.zakat.budgetAdded || 0,
+        disbursements: [],
+      },
+    };
+    save(next);
+  }, [date, save]);
+
+  if (!data) {
+    return (
+      <div className="min-h-[300px] flex items-center justify-center bg-orange-200">
+        <Loader2 className="animate-spin text-black" size={24} />
+      </div>
+    );
+  }
+
+  const zakatSpent = data.zakat.disbursements.reduce((s, d) => s + (Number(d.amount) || 0), 0);
+  const zakatClosing = (Number(data.zakat.openingBalance) || 0) + (Number(data.zakat.budgetAdded) || 0) - zakatSpent;
+
+  const fundsTotalClosing = data.funds.reduce((s, f) => {
+    const spent = f.expenses.reduce((x, e) => x + (Number(e.amount) || 0), 0);
+    return s + (Number(f.openingBalance) || 0) + (Number(f.budgetAdded) || 0) - spent;
+  }, 0);
+
+  const updateFund = (updated) => save({ ...data, funds: data.funds.map((f) => (f.id === updated.id ? updated : f)) });
+  const deleteFund = (id) => save({ ...data, funds: data.funds.filter((f) => f.id !== id) });
+  const addFund = () => save({ ...data, funds: [...data.funds, fund("New fund", 0, 0, [])] });
+  const moveFund = (index, delta) => {
+    const target = index + delta;
+    if (target < 0 || target >= data.funds.length) return;
+    const next = [...data.funds];
+    [next[index], next[target]] = [next[target], next[index]];
+    save({ ...data, funds: next });
+  };
+
+  const updateDisbursement = (updated) =>
+    save({ ...data, zakat: { ...data.zakat, disbursements: data.zakat.disbursements.map((d) => (d.id === updated.id ? updated : d)) } });
+  const deleteDisbursement = (id) =>
+    save({ ...data, zakat: { ...data.zakat, disbursements: data.zakat.disbursements.filter((d) => d.id !== id) } });
+  const addDisbursement = () =>
+    save({ ...data, zakat: { ...data.zakat, disbursements: [...data.zakat.disbursements, lineItem("", 0)] } });
+
+  return (
+    <div className="min-h-screen bg-orange-200 text-black">
+      <div className="max-w-3xl mx-auto px-5 py-8">
+        {/* Month nav */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <button onClick={() => shiftMonth(-1)} className="p-1.5 rounded-lg hover:bg-blue-100 text-black transition-colors" aria-label="Previous month">
+              <ChevronLeft size={18} />
+            </button>
+            <h1 className="text-xl font-semibold tracking-tight w-40 text-center text-black">
+              {MONTH_NAMES[date.getMonth()]} {date.getFullYear()}
+            </h1>
+            <button onClick={() => shiftMonth(1)} className="p-1.5 rounded-lg hover:bg-blue-100 text-black transition-colors" aria-label="Next month">
+              <ChevronRight size={18} />
+            </button>
+          </div>
+          <div className="flex items-center gap-3 text-xs text-black h-4">
+            {status === "saving" && "Saving..."}
+            {status === "error" && <span className="text-red-600">Couldn't save</span>}
+            {status === "no-prev" && <span className="text-red-600">No data for last month</span>}
+            <button onClick={pullFromLastMonth} className="text-black font-medium underline underline-offset-2">
+              Pull opening balances
+            </button>
+            {SEED_SPECIAL[monthKey(date)] && (
+              <button onClick={() => save(SEED_SPECIAL[monthKey(date)])} className="text-black font-medium underline underline-offset-2">
+                Load from spreadsheet
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Table 1: Eid Expenses, Qurbani, Travel, Medical */}
+        <div className="bg-white rounded-xl border border-blue-200 p-5 mb-4">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <h3 className="text-base font-semibold text-black">Special Occasion & Medical Funds (HDFC Bank)</h3>
+              <p className="text-xs text-black/60">Eid Expenses, Qurbani, Travel, Medical — balances roll forward month to month</p>
+            </div>
+            <div className="text-right">
+              <div className={`text-lg font-semibold tabular-nums ${fundsTotalClosing < 0 ? "text-red-600" : "text-black"}`}>
+                {currency(fundsTotalClosing)}
+              </div>
+              <div className="text-xs text-black/60">total balance</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+            {data.funds.map((f, i) => (
+              <FundBlock
+                key={f.id}
+                f={f}
+                onUpdate={updateFund}
+                onDelete={deleteFund}
+                onMoveUp={() => moveFund(i, -1)}
+                onMoveDown={() => moveFund(i, 1)}
+                isFirst={i === 0}
+                isLast={i === data.funds.length - 1}
+              />
+            ))}
+          </div>
+          <button onClick={addFund} className="mt-3 flex items-center gap-1.5 text-xs font-medium text-black hover:opacity-70 transition-opacity">
+            <Plus size={14} /> Add fund
+          </button>
+        </div>
+
+        {/* Table 2: Zakat (Canara Bank) */}
+        <div className="bg-white rounded-xl border-2 border-blue-400 overflow-hidden">
+          <div className="flex items-start justify-between bg-blue-600 px-5 py-3">
+            <div>
+              <h3 className="text-base font-semibold text-white">Zakat (Canara Bank)</h3>
+              <p className="text-xs text-white/80">Opening balance, this month's contribution, and where it went</p>
+            </div>
+            <div className="text-right">
+              <div className={`text-lg font-semibold tabular-nums ${zakatClosing < 0 ? "text-red-200" : "text-white"}`}>
+                {currency(zakatClosing)}
+              </div>
+              <div className="text-xs text-white/80">closing balance</div>
+            </div>
+          </div>
+          <div className="p-5">
+
+          <table className="w-full text-sm mb-2">
+            <thead>
+              <tr className="text-[10px] text-black/60 text-left">
+                <th className="font-normal pb-1 w-1/2">Opening balance</th>
+                <th className="font-normal pb-1 text-right">Added this month</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="pr-3">
+                  <div className="flex items-center gap-1">
+                    <span>₹</span>
+                    <ExprInput
+                      value={data.zakat.openingBalance}
+                      onCommit={(v) => save({ ...data, zakat: { ...data.zakat, openingBalance: v } })}
+                      className="w-full bg-blue-50 rounded px-2 py-1 outline-none"
+                    />
+                  </div>
+                </td>
+                <td>
+                  <div className="flex items-center gap-1 justify-end">
+                    <span>₹</span>
+                    <ExprInput
+                      value={data.zakat.budgetAdded}
+                      onCommit={(v) => save({ ...data, zakat: { ...data.zakat, budgetAdded: v } })}
+                      className="w-24 bg-blue-50 rounded px-2 py-1 outline-none text-right"
+                    />
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-[10px] text-black/60 text-left border-b border-blue-100">
+                <th className="font-normal pb-1">Disbursement</th>
+                <th className="font-normal pb-1 text-right">Amount</th>
+                <th className="w-6"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.zakat.disbursements.map((d) => (
+                <LineItemRow key={d.id} item={d} onUpdate={updateDisbursement} onDelete={deleteDisbursement} placeholder="Recipient / cause" />
+              ))}
+            </tbody>
+          </table>
+          <div className="flex items-center justify-between mt-2">
+            <button onClick={addDisbursement} className="flex items-center gap-1.5 text-xs font-medium text-black hover:opacity-70 transition-opacity">
+              <Plus size={14} /> Add disbursement
+            </button>
+            <div className="text-xs text-black/60">
+              Spent so far: <span className="font-medium text-black">{currency(zakatSpent)}</span>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        <p className="text-xs text-black/60 text-center mt-6 flex items-center justify-center gap-1.5">
+          <Wallet size={12} /> Data is saved to this device as you type.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ExpenseTrackerApp() {
+  const [tab, setTab] = useState("budget");
+
+  const TabButton = ({ id, label, icon: Icon }) => (
+    <button
+      onClick={() => setTab(id)}
+      className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${
+        tab === id ? "bg-blue-600 text-white" : "text-blue-900/70 hover:bg-blue-100"
+      }`}
+    >
+      <Icon size={15} />
+      {label}
+    </button>
+  );
+
+  return (
+    <div className="min-h-screen bg-orange-200">
+      <div className="sticky top-0 z-10 bg-white border-b-2 border-blue-400 shadow-sm">
+        <div className="max-w-3xl mx-auto flex">
+          <TabButton id="budget" label="Monthly Budget" icon={LayoutGrid} />
+          <TabButton id="special" label="Special Monthly Expenses" icon={PiggyBank} />
+        </div>
+      </div>
+      {tab === "budget" ? <MonthlyBudgetModule /> : <SpecialExpensesModule />}
+    </div>
+  );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<ExpenseTrackerApp />);
+
+</script>
+</body>
+</html>
