@@ -12,7 +12,9 @@ A personal expense tracker, built around a household budget spreadsheet. Runs en
 - Rich-text Notes with bold/italic/underline/bullet-list formatting
 - Configurations panel (income formula, named values, Needs/Wants/Savings percentages) has explicit **Save** and **Cancel** buttons — nothing changes until you save, so a wrong edit can always be discarded
 - **Export Data** downloads a real `.xlsx` file for the currently viewed month, named with that month and year (e.g. `HisabKitab-March-2026.xlsx`) — built directly in the browser, no server involved. It includes that month's data from **all four modules** in one file: Budget Summary, Budget Detail, Special Expenses, Monthly Balance, and Credit Cards
-- An annual bar chart at the bottom shows that year's month-by-month total spend at a glance
+- An annual bar chart at the bottom shows that year's month-by-month total spend at a glance (Needs + Wants only — Savings contributions aren't counted as expenditure)
+- A **Cash in Hand** section below the chart tracks Cash Amount and Amount in Bank separately, so you can compare what you actually physically have against the computed Balance figure above (shown there as a "Cash in Hand" line)
+- **Undo** reverts your most recent change in that module — available in every module, useful for backing out of an incorrect edit right after making it
 
 **2. Special Monthly Expenses**
 - Any number of sinking funds (e.g. seasonal or occasional expense categories) shown as widget cards in a grid, each with its own opening balance, this month's contribution, and an itemized expense table; balances roll forward month to month
@@ -27,7 +29,7 @@ A personal expense tracker, built around a household budget spreadsheet. Runs en
 - One table per card you want to track, logging transaction details, amount, and a Cleared toggle
 - Cleared transactions highlight green and drop out of the "outstanding" total shown at the top of each card
 
-All four modules include a month switcher and autosave as you type — nothing is lost switching between months.
+All four modules include a month switcher, autosave as you type, and an **Undo** option to revert the most recent change — nothing is lost switching between months.
 
 ## Importing your spreadsheet
 
