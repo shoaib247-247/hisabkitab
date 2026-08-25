@@ -28,8 +28,9 @@ A personal expense tracker, built around a household budget spreadsheet. Runs en
 **4. Credit Cards**
 - One table per card you want to track, logging transaction details, amount, and a Cleared toggle
 - Cleared transactions highlight green and drop out of the "outstanding" total shown at the top of each card
+- Unlike the other three modules, this one is **not** month-based — it's a single continuous list for ongoing card usage, since credit card activity doesn't naturally reset every month
 
-All four modules include a month switcher, autosave as you type, and an **Undo** option to revert the most recent change — nothing is lost switching between months. Each module also remembers the last month you were viewing, independently, so reopening the app returns you to where you left off rather than always starting on the current month.
+Monthly Budget, Special Monthly Expenses, and Monthly Balance each include a month switcher, remember the last month you were viewing independently (so reopening the app returns you to where you left off rather than always starting on the current month), and autosave as you type. All four modules — including the static Credit Cards page — include an **Undo** option to revert the most recent change.
 
 ## Importing your spreadsheet
 
