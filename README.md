@@ -29,7 +29,7 @@ A personal expense tracker, built around a household budget spreadsheet. Runs en
 - One table per card you want to track, logging transaction details, amount, and a Cleared toggle
 - Cleared transactions highlight green and drop out of the "outstanding" total shown at the top of each card
 
-All four modules include a month switcher, autosave as you type, and an **Undo** option to revert the most recent change — nothing is lost switching between months.
+All four modules include a month switcher, autosave as you type, and an **Undo** option to revert the most recent change — nothing is lost switching between months. Each module also remembers the last month you were viewing, independently, so reopening the app returns you to where you left off rather than always starting on the current month.
 
 ## Importing your spreadsheet
 
