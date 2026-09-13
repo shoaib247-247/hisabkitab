@@ -10,6 +10,7 @@ A personal expense tracker, built around a household budget spreadsheet. Runs en
 - Amount fields accept arithmetic, and include a **+** button next to each one (since phone number keypads don't have a plus key) — tap it to insert `+` and keep typing, e.g. `500` → **+** → `300` sums to `800` automatically
 - "Copy Last Month Budget" carries forward category budgets (skipping anything with no budget assigned) at zero spend
 - Rich-text Notes with bold/italic/underline/bullet-list formatting
+- A clock icon next to each category's delete button opens a **History** popup — a simple Date / Amount table logging every change you've made to that category's spent amount, most recent first
 - Configurations panel (income formula, named values, Needs/Wants/Savings percentages) has explicit **Save** and **Cancel** buttons — nothing changes until you save, so a wrong edit can always be discarded
 - **Export Data** downloads a real `.xlsx` file for the currently viewed month, named with that month and year (e.g. `HisabKitab-March-2026.xlsx`) — built directly in the browser, no server involved. It includes that month's data from **all four modules** in one file: Budget Summary, Budget Detail, Special Expenses, Monthly Balance, and Credit Cards
 - An annual bar chart at the bottom shows that year's month-by-month total spend at a glance (Needs + Wants only — Savings contributions aren't counted as expenditure)
